@@ -3,7 +3,6 @@ package pgsql_test
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"math/rand"
 	"sync"
 	"testing"
@@ -14,6 +13,8 @@ import (
 
 func TestTx(t *testing.T) {
 	db := open(t)
+	defer db.Close()
+
 	_, err := db.Exec(`
 		drop table if exists test_pgsql_tx;
 		create table test_pgsql_tx (
@@ -116,17 +117,13 @@ func TestTx(t *testing.T) {
 	for i := 0; i < 1000; i++ {
 		wg.Add(1)
 		go func() {
-			var err error
 			k := rand.Intn(3)
 			if k == 0 {
-				err = deposit(rand.Intn(100000))
+				deposit(rand.Intn(100000))
 			} else if k == 1 {
-				err = withdraw(rand.Intn(100000))
+				withdraw(rand.Intn(100000))
 			} else {
-				err = transfer(rand.Intn(100000))
-			}
-			if err != nil {
-				log.Println(err)
+				transfer(rand.Intn(100000))
 			}
 			wg.Done()
 		}()
